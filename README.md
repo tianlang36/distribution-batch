@@ -22,7 +22,7 @@
 2. 启动主服务器，等待节点服务器连接，客户端再提交任务。如下：
 
     public static void main(String[] args) throws Exception {
-        
+
         final BMasterService  masterMain = new BMasterService(args[0]);
         masterMain.start();
 
@@ -51,5 +51,5 @@
 1. 天狼-BZ
 
 ####联系方式
-邮箱：biz0petter@126.com
+1. 邮箱：biz0petter@126.com
 
