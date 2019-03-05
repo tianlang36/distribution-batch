@@ -19,7 +19,8 @@
 
 #### 使用说明
 
-1. 先启动各个节点服务器。要把实现的业务处理类或包放到类路径下面
+1. 先启动各个节点服务器。
+   要把实现IJob接口相关的类或包放到节点服务器classpath路径下。
 2. 启动主服务器，等待节点服务器连接，客户端再提交任务。如下：
 
     public static void main(String[] args) throws Exception {
