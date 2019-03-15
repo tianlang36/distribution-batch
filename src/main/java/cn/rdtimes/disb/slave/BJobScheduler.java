@@ -116,8 +116,22 @@ final class BJobScheduler {
 
         public void stopJob(BStopJobMsg stopJobMsg) {
             String jobId = stopJobMsg.getJobId();
+            //看看未运行队列中是否有此任务
+            synchronized (pendingQueue) {
+                //先遍历队列中的
+                Iterator<BJobRunInfo> iterator = pendingQueue.iterator();
+                while (iterator.hasNext()) {
+                    BJobRunInfo jobRunInfo = iterator.next();
+                    if (jobRunInfo.getJobId().equals(jobId)) {
+                        iterator.remove();
+                        return;
+                    }
+                }
+            }
+            //看看是否在运行中
             if (containerMap.containsKey(jobId)) {
                 containerMap.get(jobId).stop();
+                return;
             }
         }
 
