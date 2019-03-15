@@ -116,7 +116,7 @@ class BJobManager implements IJobManager {
 
     //停止任务
     public IJobFuture stopJob(String id) throws Exception {
-        if (runningJobMap.containsKey(id)) {
+        if (!runningJobMap.containsKey(id)) {
             throw new IllegalStateException(id + " is not a running job");
         }
 
