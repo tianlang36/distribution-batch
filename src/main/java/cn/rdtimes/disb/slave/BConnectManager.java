@@ -183,6 +183,7 @@ final class BConnectManager {
                     message = getMsgBody(message);
                     parseMessage(message);
                 } catch (IOException e) {
+                    isConnected = false;
                     if (!stopFlag) {
                         connect();
                     }
@@ -262,7 +263,6 @@ final class BConnectManager {
                         BInternalLogger.debug(BConnectManager.class,
                                 "It have sent a message [" + message + "]");
                     } catch (IOException e) { //连接出现问题了,需要重新连接.这时读线程应该也会出现错误进行重新连接
-                        isConnected = false;
                         break;
                     }
 
