@@ -148,6 +148,8 @@ public class BJob {
     }
 
     private void assignResult(BJobReport jobReport) {
+        if (jobReport == null) return;
+        
         failureCount = jobReport.getFailureCount();
         successCount = jobReport.getSuccessCount();
         cause = jobReport.getCause();
