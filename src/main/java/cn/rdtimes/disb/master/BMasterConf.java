@@ -20,6 +20,7 @@ final class BMasterConf {
     //单位:毫秒
     private int missingNodeMaxTime;
     private int nioThreadCount;
+    private int jobCompleteFailCount;
 
     BMasterConf() {}
 
@@ -40,11 +41,16 @@ final class BMasterConf {
         port = getInt(properties.getProperty("port", "21999"));
         missingNodeMaxTime = getInt(properties.getProperty("missingNodeMaxTime", "300")) * 1000;
         nioThreadCount = getInt(properties.getProperty("nioThreadCount", "2"));
+        jobCompleteFailCount = getInt(properties.getProperty("jobCompleteFailCount", "21"));
         BInternalLogger.logLevel = BInternalLogger.getLogLevel(properties.getProperty("logLevel", "DEBUG"));
     }
 
     private int getInt(String src) {
         return Integer.parseInt(src);
+    }
+
+    int getJobCompleteFailCount() {
+        return jobCompleteFailCount;
     }
 
     int getPort() {
