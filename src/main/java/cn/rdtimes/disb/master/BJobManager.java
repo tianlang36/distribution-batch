@@ -173,6 +173,7 @@ class BJobManager implements IJobManager {
             for (RunningJobInfo jobInfo : runningJobInfoList) {
                 if (jobInfo.nodeName.equals(nodeHost)) {
                     jobInfo.lastAccessedTime = System.currentTimeMillis();
+                    jobInfo.failCount = 0;
                     jobInfo.jobInfoMsg = jobInfoMsg;
 
                     return;
@@ -189,26 +190,23 @@ class BJobManager implements IJobManager {
                 List<RunningJobInfo> runningJobInfoList = entry.getValue();
                 for (RunningJobInfo runningJobInfo : runningJobInfoList) {
                     if (runningJobInfo.nodeName.equals(nodeName)) {
-                        //看看是否超过丢失节点的时间戳
-                        long interval = System.currentTimeMillis() - runningJobInfo.lastAccessedTime;
-                        if (interval < BMasterConf.getInstance().getMissingNodeMaxTime()) {
+                         //看看是否达到断网后计数值
+                        if (runningJobInfo.failCount < BMasterConf.getInstance().getJobCompleteFailCount()) {
+                            runningJobInfo.failCount++;
                             break;
                         }
 
                         if (runningJobInfo.jobInfoMsg == null) {
                             runningJobInfo.jobInfoMsg = new BJobInfoMsg();
                             runningJobInfo.jobInfoMsg.setJobId(entry.getKey());
+                        }
+
+                        //修改其状态为异常,无法确定是否完成
+                        if (runningJobInfo.jobInfoMsg.getState() != BJobState.COMPLETED) {
                             runningJobInfo.jobInfoMsg.setState(BJobState.EXCEPTION);
-                            runningJobInfo.jobInfoMsg.setCause(new TimeoutException("interval " +
-                                    "is more " + interval + "ms"));
+                            runningJobInfo.jobInfoMsg.setCause(new Error("unknown job state because of " +
+                                    "channel(" + nodeName + ") is closed"));
                         }
-
-                        if (runningJobInfo.jobInfoMsg.getState() == BJobState.QUEUEING ||
-                                runningJobInfo.jobInfoMsg.getState() == BJobState.RUNNING) {
-                            runningJobInfo.jobInfoMsg.setState(BJobState.COMPLETED);
-                        }
-
-                        break;
                     }
                 }
             }
@@ -383,6 +381,7 @@ class BJobManager implements IJobManager {
         String nodeName;
         long lastAccessedTime = System.currentTimeMillis();
         BJobInfoMsg jobInfoMsg;  //当有状态汇报或丢失节点超时时会赋值
+        int failCount;
     }
 
     private class RunningJobFuture {
