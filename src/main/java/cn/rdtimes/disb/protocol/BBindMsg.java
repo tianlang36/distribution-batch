@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 登录消息体
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 public class BBindMsg implements Serializable {
     private final static long serialVersionUID = -1;

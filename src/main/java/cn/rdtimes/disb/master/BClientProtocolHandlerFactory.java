@@ -4,19 +4,19 @@ import cn.rdtimes.nio.lf.BAbstractAsynchHandlerFactory;
 import cn.rdtimes.nio.lf.IAsynchChannelHandler;
 
 /**
- * 协议处理工厂
+ * 客户端协议处理工厂
  * Created by BZ.
  */
-class BProtocolHandlerFactory extends BAbstractAsynchHandlerFactory {
-    private final IMessageListener messageListener;
+class BClientProtocolHandlerFactory extends BAbstractAsynchHandlerFactory {
+    private final IClientMessageListener messageListener;
 
-    BProtocolHandlerFactory(IMessageListener messageListener) {
+    BClientProtocolHandlerFactory(IClientMessageListener messageListener) {
         this.messageListener = messageListener;
     }
 
     protected IAsynchChannelHandler createAsynchChannelHandler() {
         try {
-            return new BProtocolHandler(this, messageListener);
+            return new BClientProtocolHandler(this, messageListener);
         } catch (Exception e) {
             e.printStackTrace();
         }

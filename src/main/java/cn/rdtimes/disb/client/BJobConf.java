@@ -2,11 +2,14 @@ package cn.rdtimes.disb.client;
 
 /**
  * 客户端任务配置
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 public class BJobConf {
     private String jobClassName;
     private String inputSplitClassName;
+
+    private String masterIp;
+    private int masterPort;
 
     public BJobConf() {}
 
@@ -24,6 +27,22 @@ public class BJobConf {
 
     public void setJobClassName(String jobClassName) {
         this.jobClassName = jobClassName;
+    }
+
+    public String getMasterIp() {
+        return masterIp;
+    }
+
+    public void setMasterIp(String masterIp) {
+        this.masterIp = masterIp;
+    }
+
+    public int getMasterPort() {
+        return masterPort;
+    }
+
+    public void setMasterPort(int masterPort) {
+        this.masterPort = masterPort;
     }
 
 }

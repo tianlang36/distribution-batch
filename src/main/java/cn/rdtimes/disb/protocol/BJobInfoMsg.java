@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 /**
  * 任务基本信息消息体
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 public class BJobInfoMsg implements Serializable {
     private final static long serialVersionUID = -1;
@@ -15,8 +15,6 @@ public class BJobInfoMsg implements Serializable {
     private String jobId;
     //任务状态
     private BJobState state = BJobState.NONE;
-    //完成进度
-    private int progress;
     //开始执行时间
     private long startTime;
     //结束时间
@@ -41,14 +39,6 @@ public class BJobInfoMsg implements Serializable {
 
     public void setState(BJobState state) {
         this.state = state;
-    }
-
-    public int getProgress() {
-        return progress;
-    }
-
-    public void setProgress(int progress) {
-        this.progress = progress;
     }
 
     public long getStartTime() {
@@ -77,7 +67,7 @@ public class BJobInfoMsg implements Serializable {
 
     public String toString() {
         return "jobId:" + jobId + "; state:" + state.name() +
-                "; startTime:" + startTime + "; endTime:" + endTime + "; progress:" + progress +
+                "; startTime:" + startTime + "; endTime:" + endTime +
                 "; cause:" + (cause == null ? "none" : cause.getMessage());
     }
 

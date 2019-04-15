@@ -11,17 +11,15 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * 任务管理器实现
- * 1.暂时只能提交一个任务
+ * 1.暂时没有使用队列提交任务(应该控制并发)
 
- * Created by BZ on 2019/2/19.
+ * Created by BZ.
  */
-class BJobManager implements IJobManager {
+class BJobManager {
     //正在运行job的集合,key=jobId,value=节点列表等信息
     private final Map<String, List<RunningJobInfo>> runningJobMap;
     //正在运行job的future对象,与上面的对应
     private final Map<String, RunningJobFuture> runningJobFutureMap;
-
-    private IJobReportListener jobReportListener;
 
     BJobManager() {
         runningJobMap = new ConcurrentHashMap<String, List<RunningJobInfo>>(1);
@@ -32,13 +30,13 @@ class BJobManager implements IJobManager {
 
     //返回新的任务编号
     private synchronized static String getJobId() {
-        if (_SEQ > 10000) { //最大任务编号数目
+        if (_SEQ > 100000) { //最大任务编号数目
             _SEQ = 1;
         }
 
         SimpleDateFormat format0 = new SimpleDateFormat("yyyyMMdd");
         String jobId = format0.format(new Date());
-        jobId += "-" + String.format("%05d", _SEQ);
+        jobId += "-" + String.format("%06d", _SEQ);
         ++_SEQ;
 
         return jobId;
@@ -46,48 +44,62 @@ class BJobManager implements IJobManager {
 
     //////////////////IJobManager/////////////////
 
-    //启动任务
-    public IJobFuture startJob(String jobClassName, String inputSplitClassName) throws Exception {
-        if (runningJobMap.size() > 0) { //下个版本支持多个任务
-            throw new IllegalArgumentException("only a job");
-        }
-
-        if (BStringUtil.isEmpty(jobClassName) || BStringUtil.isEmpty((inputSplitClassName))) {
-            throw new IllegalArgumentException("jobClassName or inputSplitClassName is null");
-        }
-
+    //启动任务,是否考虑使用任务队列来管理
+    public BClientStartJobRespMsg startJob(String jobClassName, String inputSplitClassName) {
         //1.随机生成一个jobId
         String jobId = getJobId();
-        IJobFuture jobFuture = new BDefaultJobFuture(jobId);
 
-        //2.创建分片器
-        int activeNodeCount = BMasterService.getNioServer().getActiveNodeCount();
-        IInputSplit inputSplit = createInputSplit(inputSplitClassName);
-        BSplit[] splits = inputSplit.getSplit(activeNodeCount);
-        if (splits == null || splits.length == 0 || splits.length > activeNodeCount) {
-            throw new IllegalArgumentException("split need to more than count of activity node");
+        BClientStartJobRespMsg startJobRespMsg = new BClientStartJobRespMsg();
+        startJobRespMsg.setJobId(jobId);
+        startJobRespMsg.setJobState(BJobState.RUNNING);
+
+        if (BStringUtil.isEmpty(jobClassName) || BStringUtil.isEmpty((inputSplitClassName))) {
+            startJobRespMsg.setJobState(BJobState.EXCEPTION);
+            startJobRespMsg.setCause(new IllegalArgumentException("jobClassName or " +
+                    "inputSplitClassName is null"));
+            return startJobRespMsg;
         }
 
-        BInternalLogger.debug(BJobManager.class, "Job (" + jobId + ")" +
-                " have been split that is size " + splits.length);
+        String[] hostNames;
+        try {
+            //2.创建分片器
+            int activeNodeCount = BMasterService.getNioServer().getActiveNodeCount();
+            IInputSplit inputSplit = createInputSplit(inputSplitClassName);
+            BSplit[] splits = inputSplit.getSplit(activeNodeCount);
+            if (splits == null || splits.length == 0 || splits.length > activeNodeCount) {
+                startJobRespMsg.setJobState(BJobState.EXCEPTION);
+                startJobRespMsg.setCause(new IllegalArgumentException("split need to more than " +
+                        "count of activity node"));
+                return startJobRespMsg;
+            }
 
-        //3.根据分片生成启动任务消息
-        int i = 0;
-        BMessage[] messages = new BMessage[splits.length];
-        for (BSplit split : splits) {
-            BStartJobMsg startJobMsg = new BStartJobMsg();
-            startJobMsg.setJobId(jobId);
-            startJobMsg.setJobClassName(jobClassName);
-            startJobMsg.setSplit(split);
+            BInternalLogger.debug(BJobManager.class, "Job (" + jobId + ")" +
+                    " have been split that is size " + splits.length);
 
-            BMessage<BStartJobMsg> message = new BMessage<BStartJobMsg>(BMessageCommand.START_JOB,
-                    0, startJobMsg);
-            messages[i] = message;
-            ++i;
+            //3.根据分片生成启动任务消息
+            int i = 0;
+            BMessage[] messages = new BMessage[splits.length];
+            for (BSplit split : splits) {
+                BStartJobMsg startJobMsg = new BStartJobMsg();
+                startJobMsg.setJobId(jobId);
+                startJobMsg.setJobClassName(jobClassName);
+                startJobMsg.setSplit(split);
+
+                BMessage<BStartJobMsg> message = new BMessage<BStartJobMsg>(BMessageCommand.START_JOB,
+                        0, startJobMsg);
+                messages[i] = message;
+                ++i;
+            }
+
+            //4.写启动消息
+            hostNames = BMasterService.getNioServer().writeStartJobMessage(messages);
+            startJobRespMsg.setNodeCount(hostNames.length);
+            startJobRespMsg.setStartTime(System.currentTimeMillis());
+        } catch (Exception e) {
+            startJobRespMsg.setJobState(BJobState.EXCEPTION);
+            startJobRespMsg.setCause(e);
+            return startJobRespMsg;
         }
-
-        //4.写启动消息
-        String[] hostNames = BMasterService.getNioServer().writeStartJobMessage(messages);
 
         //5.更新状态
         synchronized (this) { //需要同步
@@ -102,11 +114,10 @@ class BJobManager implements IJobManager {
 
             RunningJobFuture runningJobFuture = new RunningJobFuture();
             runningJobFuture.nodeNames = hostNames;
-            runningJobFuture.startJobFuture = jobFuture;
             runningJobFutureMap.put(jobId, runningJobFuture);
         }
 
-        return jobFuture;
+        return startJobRespMsg;
     }
 
     private IInputSplit createInputSplit(String inputSplitClassName) throws Exception {
@@ -115,35 +126,23 @@ class BJobManager implements IJobManager {
     }
 
     //停止任务
-    public IJobFuture stopJob(String id) throws Exception {
+    public void stopJob(String id) throws Exception {
         if (!runningJobMap.containsKey(id)) {
             throw new IllegalStateException(id + " is not a running job");
         }
 
         RunningJobFuture runningJobFuture = runningJobFutureMap.get(id);
         runningJobFuture.stopFlag = true;
-        //通知停止在startJob中的future
-        runningJobFuture.startJobFuture.setCompleted(null);
-        runningJobFuture.stopJobFuture = new BDefaultJobFuture(id);
+
         //发送停止消息
         BStopJobMsg stopJobMsg = new BStopJobMsg();
         stopJobMsg.setJobId(id);
         BMasterService.getNioServer().writeStopJobMessage(new BMessage<BStopJobMsg>(BMessageCommand.STOP_JOB,
                 0, stopJobMsg), runningJobFuture.nodeNames);
-
-        return runningJobFuture.stopJobFuture;
     }
 
-    public void setJobReportListener(IJobReportListener jobReportListener) {
-        this.jobReportListener = jobReportListener;
-    }
-
-    //消息状态报告通知
+    //节点消息状态报告通知
     void jobReportNotify(String nodeHost, BReportJobMsg reportJobMsg) {
-        if (jobReportListener == null) { //如果为空,使用缺省的对象
-            jobReportListener = new BJobManager.BDefaultJobReportListener();
-        }
-
         //没有运行的任务就返回
         if (runningJobMap.size() == 0 || stopFlag) return;
 
@@ -153,7 +152,6 @@ class BJobManager implements IJobManager {
             for (BJobInfoMsg jobInfoMsg : jobInfoMsgs) {
                 String jobId = jobInfoMsg.getJobId();
                 updateRunningJobMap(jobId, reportJobMsg.getNodeName(), jobInfoMsg);
-                jobReportListener.jobReport(jobId, getJobReport(jobId));
             }
         } else { //是心跳,有一种情况就是节点没有成功发送正在运行任务状态(可能断网了)
             updateRunningJobMapByNodeName(nodeHost);
@@ -164,7 +162,7 @@ class BJobManager implements IJobManager {
         }
     }
 
-    //状态报告通知时更新相关节点下的状态信息
+    //节点状态报告通知时更新相关节点下的状态信息
     private void updateRunningJobMap(String jobId, String nodeHost, BJobInfoMsg jobInfoMsg) {
         synchronized (this) {
             List<RunningJobInfo> runningJobInfoList = runningJobMap.get(jobId);
@@ -182,7 +180,7 @@ class BJobManager implements IJobManager {
         }
     }
 
-    //状态报告通知根据节点更新(非正常状态报告的,但任务未结束)
+    //节点状态报告通知根据节点更新(非正常状态报告的,但任务状态未知)
     private void updateRunningJobMapByNodeName(String nodeName) {
         synchronized (this) {
             Set<Map.Entry<String, List<RunningJobInfo>>> entries = runningJobMap.entrySet();
@@ -190,7 +188,7 @@ class BJobManager implements IJobManager {
                 List<RunningJobInfo> runningJobInfoList = entry.getValue();
                 for (RunningJobInfo runningJobInfo : runningJobInfoList) {
                     if (runningJobInfo.nodeName.equals(nodeName)) {
-                         //看看是否达到断网后计数值
+                        //看看是否达到断网后计数值
                         if (runningJobInfo.failCount < BMasterConf.getInstance().getJobCompleteFailCount()) {
                             runningJobInfo.failCount++;
                             break;
@@ -208,9 +206,9 @@ class BJobManager implements IJobManager {
                                     "channel(" + nodeName + ") is closed"));
                         }
                     }
-                }
-            }
-        }
+                } //end for
+            } //end for
+        } //end syn
     }
 
     //根据任务id汇总状态报告
@@ -265,15 +263,6 @@ class BJobManager implements IJobManager {
         }
     }
 
-    //缺省实现(如果使用消息需要重新实现),向客户端汇报任务状态
-    private class BDefaultJobReportListener implements IJobReportListener {
-
-        public void jobReport(String jobId, BJobReport jobReport) {
-            BInternalLogger.info(BJobManager.class, jobReport.toString());
-        }
-
-    }
-
     private volatile boolean stopFlag;
     private final Object lock = new Object();
 
@@ -307,7 +296,7 @@ class BJobManager implements IJobManager {
             BInternalLogger.info(BJobManager.class, getName() + " is over.");
         }
 
-        private void checkTimeout() {
+        private void checkTimeout() {  //这个地方可以考虑其他算法,如果数量大会使同步时间较长
             synchronized (BJobManager.this) {
                 String jobId;
 
@@ -329,18 +318,10 @@ class BJobManager implements IJobManager {
                                     runningJobInfo.jobInfoMsg = new BJobInfoMsg();
                                     runningJobInfo.jobInfoMsg.setJobId(entry.getKey());
                                 }
+
                                 runningJobInfo.jobInfoMsg.setState(BJobState.EXCEPTION);
                                 runningJobInfo.jobInfoMsg.setCause(new TimeoutException("interval " +
                                         "is more " + interval + "ms"));
-                            }
-
-                            if (runningJobInfo.jobInfoMsg == null) continue;
-
-                            if (runningJobInfo.jobInfoMsg.getState() == BJobState.EXCEPTION ||
-                                    runningJobInfo.jobInfoMsg.getState() == BJobState.NONE ||
-                                    runningJobInfo.jobInfoMsg.getState() == BJobState.STOPPED ||
-                                    runningJobInfo.jobInfoMsg.getState() == BJobState.COMPLETED) {
-                                continue;
                             }
                         }
                     } catch (Exception e) {
@@ -348,17 +329,9 @@ class BJobManager implements IJobManager {
                     } finally {
                         //根据jobId获取每个任务状态的情况,完成的任务将通知并删除
                         BJobReport jobReport = getJobReport(jobId);
-                        if (jobReport.getTotalCount() > 0 && jobReport.equalTotalCount()) { //任务都执行完成
-                            RunningJobFuture jobFuture = runningJobFutureMap.get(jobId);
-                            if (jobFuture.stopFlag) {
-                                jobFuture.stopJobFuture.setCompleted(jobReport);
-                            } else {
-                                jobFuture.startJobFuture.setCompleted(jobReport);
-                                if (jobFuture.stopJobFuture != null) {
-                                    jobFuture.stopJobFuture.setCompleted(jobReport);
-                                }
-                            }
-
+                        if (jobReport.getTotalCount() > 0 && jobReport.equalTotalCount()) {
+                            //任务都执行完成发送关闭消息
+                            sendClientCloseMessage(jobReport);
                             //删除任务
                             removeJob(jobId);
 
@@ -372,6 +345,27 @@ class BJobManager implements IJobManager {
 
     }
 
+    private void sendClientCloseMessage(BJobReport jobReport) {
+        String jobId = jobReport.getJobId();
+
+        BClientCloseJobMsg clientCloseJobMsg = new BClientCloseJobMsg();
+        clientCloseJobMsg.setJobId(jobId);
+        clientCloseJobMsg.setTotalCount(jobReport.getTotalCount());
+        clientCloseJobMsg.setCanceledCount(jobReport.getCanceledCount());
+        clientCloseJobMsg.setFailureCount(jobReport.getFailureCount());
+        clientCloseJobMsg.setSuccessCount(jobReport.getSuccessCount());
+        clientCloseJobMsg.setCause(jobReport.getCause());
+
+        BMessage<BClientCloseJobMsg> message = new BMessage<BClientCloseJobMsg>(BMessageCommand
+                .CLIENT_CLOSE, 0, clientCloseJobMsg);
+        try {
+            BMasterService.getClientNioServer().writeMessage(jobId, message);
+            BMasterService.getClientNioServer().removeAndCloseChannel(jobId);
+        } catch (Exception e) {
+            BInternalLogger.error(BJobManager.class, "send client message error:", e);
+        }
+    }
+
     private void removeJob(String jobId) {
         runningJobMap.remove(jobId);
         runningJobFutureMap.remove(jobId);
@@ -381,12 +375,10 @@ class BJobManager implements IJobManager {
         String nodeName;
         long lastAccessedTime = System.currentTimeMillis();
         BJobInfoMsg jobInfoMsg;  //当有状态汇报或丢失节点超时时会赋值
-        int failCount;
+        int failCount;           //当节点丢失时的计数,当计数达到一定数量时就认为认为结束
     }
 
     private class RunningJobFuture {
-        IJobFuture startJobFuture;
-        IJobFuture stopJobFuture;
         String[] nodeNames;
         boolean stopFlag;  //是否调用了停止方法
     }

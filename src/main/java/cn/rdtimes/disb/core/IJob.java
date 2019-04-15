@@ -5,7 +5,7 @@ package cn.rdtimes.disb.core;
  * 批处理任务,这个是具体业务逻辑要实现的接口
  * 这个是在节点服务器端运行的
  * <p>
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public interface IJob {
 

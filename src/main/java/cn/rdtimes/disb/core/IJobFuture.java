@@ -4,7 +4,7 @@ import java.util.concurrent.Future;
 
 /**
  * 提交任务后返回的future接口
- * Created by BZ on 2019/2/19.
+ * Created by BZ.
  */
 public interface IJobFuture extends Future<cn.rdtimes.disb.core.BJobReport> {
 

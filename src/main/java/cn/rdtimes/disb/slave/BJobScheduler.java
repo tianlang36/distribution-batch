@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * 2.定时汇报任务状态
  * 3.管理连接管理
  * 4.写即时完成消息
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 final class BJobScheduler {
     private final BConnectManager connectManager;
@@ -131,7 +131,6 @@ final class BJobScheduler {
             //看看是否在运行中
             if (containerMap.containsKey(jobId)) {
                 containerMap.get(jobId).stop();
-                return;
             }
         }
 
@@ -223,13 +222,16 @@ final class BJobScheduler {
             BReportJobMsg reportJobMsg = new BReportJobMsg();
             BMessage<BReportJobMsg> message = new BMessage<BReportJobMsg>(BMessageCommand.REPORT_HEARTBEAT,
                     0, reportJobMsg);
-            int count = 0;
 
-            //先遍历队列中的
-            Iterator<BJobRunInfo> iterator = pendingQueue.iterator();
-            while (iterator.hasNext()) {
-                reportJobMsg.add(getJobInfoMsg(iterator.next()));
-                ++count;
+            int count = 0;
+            Iterator<BJobRunInfo> iterator;
+            //先遍历队列中的,与stop遍历顺序一致
+            synchronized (pendingQueue) {
+                iterator = pendingQueue.iterator();
+                while (iterator.hasNext()) {
+                    reportJobMsg.add(getJobInfoMsg(iterator.next()));
+                    ++count;
+                }
             }
 
             //再遍历列表中的

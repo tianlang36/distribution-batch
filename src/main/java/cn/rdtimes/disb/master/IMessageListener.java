@@ -5,7 +5,7 @@ import cn.rdtimes.disb.protocol.BReportJobMsg;
 /**
  * 节点消息指令监听处理器
  * 用来执行指令
- * Created by BZ on 2019/2/15.
+ * Created by BZ.
  */
 interface IMessageListener {
 

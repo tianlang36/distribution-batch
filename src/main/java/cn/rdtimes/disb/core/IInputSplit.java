@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 获取分片信息接口
  * 这是在主服务器端运行的
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public interface IInputSplit extends Serializable {
 

@@ -1,11 +1,10 @@
 package cn.rdtimes.disb.client;
 
 import cn.rdtimes.disb.core.IJobFuture;
-import cn.rdtimes.disb.master.IJobManager;
 
 /**
  * 代理模式
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 class BJobLaunchProxy implements IJobLaunch {
     private final BJobLaunchImp jobLaunchImp;
@@ -20,10 +19,6 @@ class BJobLaunchProxy implements IJobLaunch {
 
     public IJobFuture stopJob(String jobId) throws Exception {
         return jobLaunchImp.stopJob(jobId);
-    }
-
-    public void setJobReportListener(IJobManager.IJobReportListener jobReportListener) {
-        jobLaunchImp.setJobReportListener(jobReportListener);
     }
 
 }

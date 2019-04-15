@@ -3,16 +3,16 @@ package cn.rdtimes.disb.protocol;
 import java.io.Serializable;
 
 /**
- * 停止任务消息体
+ * 客户端停止任务消息体
  * Created by BZ.
  */
-public class BStopJobMsg implements Serializable {
+public class BClientStopJobMsg implements Serializable {
     private final static long serialVersionUID = -1;
 
     //任务编号
     private String jobId;
 
-    public BStopJobMsg() {}
+    public BClientStopJobMsg() {}
 
     public String getJobId() {
         return jobId;

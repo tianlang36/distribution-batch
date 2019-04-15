@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 任务状态报告
  * 应该是所有节点汇总的状态
- * Created by BZ on 2019/2/19.
+ * Created by BZ.
  */
 public class BJobReport implements Serializable {
     private final static long serialVersionUID = -1;

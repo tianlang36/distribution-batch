@@ -9,7 +9,7 @@ import java.util.Properties;
 /**
  * 节点配置信息
  * 单件模式
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 final class BNodeConf {
     private final static String FILE_NAME = "slave.properties";

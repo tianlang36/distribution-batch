@@ -1,11 +1,10 @@
 package cn.rdtimes.disb.client;
 
 import cn.rdtimes.disb.core.IJobFuture;
-import cn.rdtimes.disb.master.IJobManager;
 
 /**
  * 客户端发布和控制任务接口
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 interface IJobLaunch {
 
@@ -24,10 +23,5 @@ interface IJobLaunch {
      */
     IJobFuture stopJob(String jobId) throws Exception;
 
-    /**
-     * 设置任务报告监听
-     * @param jobReportListener
-     */
-    void setJobReportListener(IJobManager.IJobReportListener jobReportListener);
 
 }

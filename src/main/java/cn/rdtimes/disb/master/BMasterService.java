@@ -18,17 +18,19 @@ import cn.rdtimes.util.BStringUtil;
  * 调用顺序:
  * client->master->node
  * <p>
- * Created by BZ on 2019/2/19.
+ * Created by BZ.
  */
-public final class BMasterService {
+final class BMasterService {
     private static BJobManager jobManager;
     private static BNioServer nioServer;
+    private static BClientNioServer clientNioServer;
 
-    public BMasterService(String confFileName) {
+    BMasterService(String confFileName) {
         BMasterConf.getInstance().readConf(BStringUtil.isEmpty(confFileName) ? null : confFileName);
 
         jobManager = new BJobManager();
         nioServer = new BNioServer();
+        clientNioServer = new BClientNioServer();
     }
 
     static BJobManager getJobManager() {
@@ -39,12 +41,18 @@ public final class BMasterService {
         return nioServer;
     }
 
-    public void start() {
-        jobManager.start();
-        nioServer.start();
+    static BClientNioServer getClientNioServer() {
+        return clientNioServer;
     }
 
-    public void shutdown() {
+    void start() {
+        jobManager.start();
+        nioServer.start();
+        clientNioServer.start();
+    }
+
+    void shutdown() {
+        clientNioServer.close();
         nioServer.close();
         jobManager.shutdown();
     }

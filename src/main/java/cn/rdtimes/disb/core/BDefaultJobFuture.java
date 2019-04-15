@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * 缺省实现
- * Created by BZ on 2019/2/21.
+ * Created by BZ.
  */
 public class BDefaultJobFuture implements IJobFuture {
     //任务编号

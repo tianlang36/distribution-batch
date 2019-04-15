@@ -8,7 +8,7 @@ import java.util.List;
  * 汇报任务状态消息体
  * 如果没有任务可以把当做为心跳测试.
  * <p>
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public class BReportJobMsg implements Serializable {
     private final static long serialVersionUID = -1;

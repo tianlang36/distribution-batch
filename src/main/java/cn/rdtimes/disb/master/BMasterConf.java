@@ -9,7 +9,7 @@ import java.util.Properties;
 /**
  * 主服务配置信息
  * 单件模式
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 final class BMasterConf {
     private final static String FILE_NAME = "master.properties";
@@ -20,6 +20,11 @@ final class BMasterConf {
     //单位:毫秒
     private int missingNodeMaxTime;
     private int nioThreadCount;
+
+    private int clientPort;
+    private int clientNioThreadCount;
+    //单位:毫秒
+    private int clientHeartbeatInterval;
     private int jobCompleteFailCount;
 
     BMasterConf() {}
@@ -41,7 +46,10 @@ final class BMasterConf {
         port = getInt(properties.getProperty("port", "21999"));
         missingNodeMaxTime = getInt(properties.getProperty("missingNodeMaxTime", "300")) * 1000;
         nioThreadCount = getInt(properties.getProperty("nioThreadCount", "2"));
+        clientPort = getInt(properties.getProperty("clientPort", "21998"));
         jobCompleteFailCount = getInt(properties.getProperty("jobCompleteFailCount", "21"));
+        clientNioThreadCount = getInt(properties.getProperty("clientNioThreadCount", "1"));
+        clientHeartbeatInterval = getInt(properties.getProperty("clientHeartbeatInterval", "5")) * 1000;
         BInternalLogger.logLevel = BInternalLogger.getLogLevel(properties.getProperty("logLevel", "DEBUG"));
     }
 
@@ -49,7 +57,7 @@ final class BMasterConf {
         return Integer.parseInt(src);
     }
 
-    int getJobCompleteFailCount() {
+    public int getJobCompleteFailCount() {
         return jobCompleteFailCount;
     }
 
@@ -65,4 +73,15 @@ final class BMasterConf {
         return nioThreadCount;
     }
 
+    public int getClientPort() {
+        return clientPort;
+    }
+
+    public int getClientNioThreadCount() {
+        return clientNioThreadCount;
+    }
+
+    public int getClientHeartbeatInterval() {
+        return clientHeartbeatInterval;
+    }
 }

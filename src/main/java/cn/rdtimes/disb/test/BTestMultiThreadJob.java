@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by BZ on 2019/3/1.
+ * Created by BZ.
  */
 public class BTestMultiThreadJob extends BAbstractJob {
     private BMultiThreadPartition multiThreadPartition;

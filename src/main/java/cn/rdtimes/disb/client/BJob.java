@@ -1,17 +1,18 @@
 package cn.rdtimes.disb.client;
 
 import cn.rdtimes.disb.core.*;
-import cn.rdtimes.disb.master.IJobManager;
 import cn.rdtimes.util.BStringUtil;
 
 /**
- * 客户端任务提交类,只能执行一次任务,多个任务需要创建多个本对象
- * 使用代理模式,以后主服务器可以独立部署,通过消息来管理.
+ * 客户端任务提交类,只能执行一次任务,不能重复提交任务。
+ * 多个任务需要创建多个此对象。
+ * 使用代理模式.
  * 使用说明:
  * BJob job = new BJob(new BJobConf());
- * job.setJobClassName(IJob.class);
- * job.setInputSplit(IInputSplit.class);
- * job.setOutput(true);
+ * job.setMasterIp("localhost");
+ * job.setMasterPort(21998);
+ * job.setJobClass(IJob.class);
+ * job.setInputSplitClass(IInputSplit.class);
  * job.launchJob();
  * job.waitCompleted();
  * if (!job.isSuccess()) {
@@ -20,7 +21,7 @@ import cn.rdtimes.util.BStringUtil;
  * //成功处理
  * }
  * <p>
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public class BJob {
     //创建job代理对象
@@ -32,8 +33,6 @@ public class BJob {
     private volatile boolean completed;
     //是否被stop的标志
     private volatile boolean stopFlag;
-    //是否输出日志
-    private volatile boolean isOutput;
     //异常信息
     private String cause;
     //成功完成任务节点的数量
@@ -56,30 +55,42 @@ public class BJob {
 
         this.jobConf = jobConf;
         jobLaunchProxy = new BJobLaunchProxy();
-        jobLaunchProxy.setJobReportListener(new JobReportListener());
     }
 
-    public void setJobClass(Class<? extends IJob> clazz) {
+    public BJob setJobClass(Class<? extends IJob> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz is null");
         }
 
         jobConf.setJobClassName(clazz.getName());
+        return this;
     }
 
-    public void setInputSplit(Class<? extends IInputSplit> clazz) {
+    public BJob setInputSplitClass(Class<? extends IInputSplit> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("clazz is null");
         }
 
         jobConf.setInputSplitClassName(clazz.getName());
+        return this;
     }
 
-    private boolean haveJob() {
-        if (completed || !BStringUtil.isEmpty(id)) {
-            return true;
+    public BJob setMasterIp(String ip) {
+        if (BStringUtil.isEmpty(ip)) {
+            throw new IllegalArgumentException("ip is null");
         }
-        return false;
+
+        jobConf.setMasterIp(ip);
+        return this;
+    }
+
+    public BJob setMasterPort(int port) {
+        if (port <= 0) {
+            throw new IllegalArgumentException("port is than 0");
+        }
+
+        jobConf.setMasterPort(port);
+        return this;
     }
 
     public String getId() {
@@ -104,6 +115,13 @@ public class BJob {
 
     private IJobFuture startJobFuture;
 
+    private boolean haveJob() {
+        if (completed || !BStringUtil.isEmpty(id)) {
+            return true;
+        }
+        return false;
+    }
+
     public void launchJob() throws Exception {
         if (haveJob()) {
             throw new IllegalStateException("job have been completed or is running");
@@ -115,12 +133,8 @@ public class BJob {
         BInternalLogger.debug(BJob.class, "It has a job (" + id + ") that is running...");
     }
 
-    public void setOutput(boolean isOutput) {
-        this.isOutput = isOutput;
-    }
-
     public boolean isSuccess() {
-        return (failureCount == 0 && !stopFlag);
+        return (successCount > 0 && failureCount == 0 && !stopFlag);
     }
 
     public boolean isStopped() {
@@ -136,20 +150,15 @@ public class BJob {
         }
 
         stopFlag = true;
-        completed = true;
-
         IJobFuture jobFuture = jobLaunchProxy.stopJob(id);
-        if (startJobFuture != null) {  //有启动等待的就结束
-            startJobFuture.setCompleted(null);
-        }
-
         BJobReport jobReport = jobFuture.waitCompleted();
         assignResult(jobReport);
     }
 
     private void assignResult(BJobReport jobReport) {
+        completed = true;
         if (jobReport == null) return;
-        
+
         failureCount = jobReport.getFailureCount();
         successCount = jobReport.getSuccessCount();
         cause = jobReport.getCause();
@@ -163,7 +172,6 @@ public class BJob {
 
         if (startJobFuture != null) {
             BJobReport jobReport = startJobFuture.waitCompleted();
-            completed = true;
             assignResult(jobReport);
         }
 
@@ -174,16 +182,6 @@ public class BJob {
         return "id:" + id + "; isSuccess:" + isSuccess() + "; isStopped:" + isStopped() +
                 "; successCount:" + successCount + "; failureCount:" + failureCount +
                 "; canceledCount:" + canceledCount + "; cause:" + cause;
-    }
-
-    class JobReportListener implements IJobManager.IJobReportListener {
-
-        public void jobReport(String jobId, BJobReport jobReport) {
-            if (!isOutput) return;
-
-            BInternalLogger.info(JobReportListener.class, jobReport.toString());
-        }
-
     }
 
 }

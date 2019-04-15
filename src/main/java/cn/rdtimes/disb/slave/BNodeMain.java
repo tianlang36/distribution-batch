@@ -8,12 +8,12 @@ import cn.rdtimes.disb.core.BInternalLogger;
  * 启动节点服务器:
  * java cn.rdtimes.disb.slave.BNodeMain [confFileName]
  * <p>
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 public final class BNodeMain {
     private final BJobScheduler jobScheduler;
 
-    BNodeMain(String[] args) {
+    private BNodeMain(String[] args) {
         BNodeConf.getInstance().readConf(args.length > 0 ? args[0] : null);
 
         jobScheduler = new BJobScheduler();

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 1.读写消息
  * 2.通知处理消息
  * 3.管理通道
- * Created by BZ on 2019/2/19.
+ * Created by BZ.
  */
 final class BNioServer {
     private final BProtocolHandlerFactory handlerFactory;
@@ -39,11 +39,10 @@ final class BNioServer {
 
     private void startAcceptors() throws Exception {
         InetSocketAddress address = new InetSocketAddress(BMasterConf.getInstance().getPort());
-
-        BInternalLogger.info(BNioServer.class, "NioServer accept on " + address);
-
         BAcceptor acceptor = new BAcceptor(demultiplexor, address, handlerFactory);
         acceptor.start(1);
+
+        BInternalLogger.info(BNioServer.class, "NioServer accept on " + address);
     }
 
     private void printStatistics() {
@@ -146,7 +145,7 @@ final class BNioServer {
         }
 
         public void bind(String nodeHost, BProtocolHandler attachment) {
-            //防止节点名称重复,后者将被关闭
+            //防止节点名称重复,后者将被强制关闭
             if (!channelMap.containsKey(nodeHost)) {
                 channelMap.put(nodeHost, attachment);
             } else {

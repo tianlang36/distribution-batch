@@ -3,7 +3,7 @@ package cn.rdtimes.disb.core;
 
 /**
  * 抽象任务类
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public abstract class BAbstractJob implements IJob {
     protected BSplit split;

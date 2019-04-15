@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 退出消息体
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 public class BUnbindMsg implements Serializable {
     private final static long serialVersionUID = -1;

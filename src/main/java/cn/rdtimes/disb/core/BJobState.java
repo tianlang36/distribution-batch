@@ -2,7 +2,7 @@ package cn.rdtimes.disb.core;
 
 /**
  * 任务状态
- * Created by BZ on 2019/2/13.
+ * Created by BZ.
  */
 public enum BJobState {
     NONE,           //未知

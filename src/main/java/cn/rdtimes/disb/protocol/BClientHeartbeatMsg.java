@@ -1,18 +1,20 @@
 package cn.rdtimes.disb.protocol;
 
+import cn.rdtimes.disb.core.BJobState;
+
 import java.io.Serializable;
 
 /**
- * 停止任务消息体
+ * 客户端心跳或汇报消息体
  * Created by BZ.
  */
-public class BStopJobMsg implements Serializable {
+public class BClientHeartbeatMsg implements Serializable {
     private final static long serialVersionUID = -1;
 
     //任务编号
     private String jobId;
 
-    public BStopJobMsg() {}
+    public BClientHeartbeatMsg() {}
 
     public String getJobId() {
         return jobId;
@@ -23,7 +25,7 @@ public class BStopJobMsg implements Serializable {
     }
 
     public String toString() {
-        return "jobId:" + jobId;
+        return "jobId:" + jobId ;
     }
 
 }

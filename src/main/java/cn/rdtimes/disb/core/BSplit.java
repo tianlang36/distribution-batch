@@ -9,7 +9,7 @@ import java.util.Set;
  * 分片信息类
  * 能被序列化
  * <p>
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public class BSplit implements Serializable {
     private final static long serialVersionUID = -1;

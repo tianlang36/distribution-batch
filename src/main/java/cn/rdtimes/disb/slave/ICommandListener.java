@@ -6,7 +6,7 @@ import cn.rdtimes.disb.protocol.BStopJobMsg;
 /**
  * 执行消息指令
  * 命令模式
- * Created by BZ on 2019/2/15.
+ * Created by BZ.
  */
 interface ICommandListener {
 

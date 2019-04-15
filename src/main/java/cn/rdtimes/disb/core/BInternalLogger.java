@@ -5,7 +5,7 @@ import java.util.Date;
 
 /**
  * 内部日志类
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 public class BInternalLogger {
     public static Level logLevel = Level.DEBUG;

@@ -4,7 +4,7 @@ import cn.rdtimes.disb.core.BSplit;
 import cn.rdtimes.disb.core.IInputSplit;
 
 /**
- * Created by BZ on 2019/2/27.
+ * Created by BZ.
  */
 public class BTestInputSplit implements IInputSplit {
 

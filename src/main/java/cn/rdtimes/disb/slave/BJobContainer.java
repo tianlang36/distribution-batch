@@ -11,7 +11,7 @@ import cn.rdtimes.disb.core.IJob;
  * 1.运行job(仅能一个)
  * 2.更新job状态(启动,停止,异常,完成)
  * 3.向调度器注册和注销自己
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 final class BJobContainer {
     private final BJobScheduler.BJobRunInfo jobRunInfo;

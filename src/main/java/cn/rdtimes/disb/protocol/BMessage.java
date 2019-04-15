@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 /**
  * 消息定义
- * Created by BZ on 2019/2/12.
+ * Created by BZ.
  */
 public class BMessage<T extends Serializable> {
     public final static int HEAD_SIZE = 20;
@@ -137,6 +137,21 @@ public class BMessage<T extends Serializable> {
         } else if (message.head.command == BMessageCommand.UNBIND) {
             BUnbindMsg unbindMsg = BSerializerUtil.deserialize(copyBody);
             message.setBody(unbindMsg);
+        } else if (message.head.command == BMessageCommand.CLIENT_START_JOB) {
+            BClientStartJobMsg clientStartJobMsg = BSerializerUtil.deserialize(copyBody);
+            message.setBody(clientStartJobMsg);
+        } else if (message.head.command == BMessageCommand.CLIENT_START_JOB_RESP) {
+            BClientStartJobRespMsg clientStartJobRespMsg = BSerializerUtil.deserialize(copyBody);
+            message.setBody(clientStartJobRespMsg);
+        } else if (message.head.command == BMessageCommand.CLIENT_CLOSE) {
+            BClientCloseJobMsg clientCloseJobMsg = BSerializerUtil.deserialize(copyBody);
+            message.setBody(clientCloseJobMsg);
+        } else if (message.head.command == BMessageCommand.CLIENT_STOP_JOB) {
+            BClientStopJobMsg clientStopJobMsg = BSerializerUtil.deserialize(copyBody);
+            message.setBody(clientStopJobMsg);
+        } else if (message.head.command == BMessageCommand.CLIENT_REPORT_HEARTBEAT) {
+            BClientHeartbeatMsg clientHeartbeatMsg = BSerializerUtil.deserialize(copyBody);
+            message.setBody(clientHeartbeatMsg);
         }
 
         return message;

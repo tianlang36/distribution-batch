@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * 1.连接主服务器,直到连接上或关闭为止
  * 2.循环读消息并通知处理消息
  * 3.写消息
- * Created by BZ on 2019/2/14.
+ * Created by BZ.
  */
 final class BConnectManager {
     //失败时最小连接间隔
@@ -224,9 +224,7 @@ final class BConnectManager {
             BInternalLogger.debug(BConnectManager.class,
                     "It have received a message [" + message + "]");
 
-            if (message.getCommand() == BMessageCommand.BIND_RESP) { //不处理
-                return;
-            } else if (message.getCommand() == BMessageCommand.START_JOB) { //启动任务通知
+            if (message.getCommand() == BMessageCommand.START_JOB) { //启动任务通知
                 commandListener.startJob((BStartJobMsg) message.getBody());
             } else if (message.getCommand() == BMessageCommand.STOP_JOB) { //停止任务通知
                 commandListener.stopJob((BStopJobMsg) message.getBody());

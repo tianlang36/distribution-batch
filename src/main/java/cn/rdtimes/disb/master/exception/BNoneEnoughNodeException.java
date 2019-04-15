@@ -2,7 +2,7 @@ package cn.rdtimes.disb.master.exception;
 
 /**
  * 没有找到足够的节点服务器异常
- * Created by BZ on 2019/2/22.
+ * Created by BZ.
  */
 public class BNoneEnoughNodeException extends Exception {
 

@@ -5,7 +5,7 @@ import cn.rdtimes.disb.core.BAbstractJob;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * Created by BZ on 2019/2/27.
+ * Created by BZ.
  */
 public class BTestNodeJob extends BAbstractJob {
     private CountDownLatch countDownLatch;
