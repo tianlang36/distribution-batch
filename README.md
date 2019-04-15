@@ -24,9 +24,9 @@
     public static void main(String[] args) throws Exception {
 
         BJob clientJob = new BJob();
+        clientJob.setMasterIp("127.0.0.1").setMasterPort(21998);
         clientJob.setInputSplit(BTestInputSplit.class);
         clientJob.setJobClass(BTestMultiThreadJob.class);     //(BTestNodeJob.class);
-        clientJob.setOutput(true);
         clientJob.launchJob();
         clientJob.waitCompleted();
         System.out.println("Job is over===============" + clientJob);
