@@ -1,4 +1,4 @@
-# distribution-batch
+# distribution-batch(1.0.0)
 
 #### 介绍
 轻量型分布式批处理框架，用于对大数据集分块处理场景。分为客户端(client)、主服务器(master)和节点服务器(slave)。客户端提交任务到主服务器，主服务器将任务分发给各个节点服务器进行计算。
