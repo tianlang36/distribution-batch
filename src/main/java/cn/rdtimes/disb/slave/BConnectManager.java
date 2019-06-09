@@ -133,7 +133,7 @@ final class BConnectManager {
     //写消息
     void writeMessage(BMessage message) {
         //避免在未连接时消息泛滥
-        if (!isConnected || writeQueue.size() > MAX_MESSAGE_COUNT) {
+        if (!isConnected && writeQueue.size() > MAX_MESSAGE_COUNT) {
             return;
         }
 
