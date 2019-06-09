@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 final class BConnectManager {
     //失败时最小连接间隔
     private final static int CONNECT_INTERVAL = 5000;
+    private final static int MAX_MESSAGE_COUNT = 20;
 
     private Socket clientSocket;
     private InputStream inputStream;
@@ -93,14 +94,8 @@ final class BConnectManager {
         clientSocket = new Socket(ip, port);
         inputStream = clientSocket.getInputStream();
         outputStream = clientSocket.getOutputStream();
-        isConnected = true;
 
         sendBind();
-
-        //通知写线程可以发送了
-        synchronized (writeQueue) {
-            writeQueue.notify();
-        }
     }
 
     private int calcInterval(int count) {
@@ -131,7 +126,7 @@ final class BConnectManager {
     //写消息
     void writeMessage(BMessage message) {
         //避免在未连接时消息泛滥
-        if (!isConnected) {
+        if (!isConnected  && writeQueue.size() > MAX_MESSAGE_COUNT) {
             return;
         }
 
@@ -222,7 +217,13 @@ final class BConnectManager {
             BInternalLogger.debug(BConnectManager.class,
                     "It have received a message [" + message + "]");
 
-            if (message.getCommand() == BMessageCommand.START_JOB) { //启动任务通知
+            if (message.getCommand() == BMessageCommand.BIND_RESP) {
+                isConnected = true;
+                //通知写线程可以发送了
+                synchronized (writeQueue) {
+                    writeQueue.notify();
+                }
+            } else if (message.getCommand() == BMessageCommand.START_JOB) { //启动任务通知
                 commandListener.startJob((BStartJobMsg) message.getBody());
             } else if (message.getCommand() == BMessageCommand.STOP_JOB) { //停止任务通知
                 commandListener.stopJob((BStopJobMsg) message.getBody());
