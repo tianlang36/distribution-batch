@@ -146,10 +146,10 @@ final class BNioServer {
 
         public void bind(String nodeHost, BProtocolHandler attachment) {
             //防止节点名称重复,后者将被强制关闭
-            if (!channelMap.containsKey(nodeHost)) {
-                channelMap.put(nodeHost, attachment);
-            } else {
-                attachment.close();
+            if (channelMap.putIfAbsent(nodeHost, attachment) != null) {
+                if (!channelMap.get(nodeHost).equals(attachment)) {
+                    attachment.close();
+                }
             }
 
             BInternalLogger.debug(MessageListener.class, "It is " + channelMap.size() +
