@@ -22,8 +22,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 final class BConnectManager {
     //失败时最小连接间隔
     private final static int CONNECT_INTERVAL = 5000;
-    //连接断开时,最多能写入队列中的消息数量
-    private final static int MAX_MESSAGE_COUNT = 20;
 
     private Socket clientSocket;
     private InputStream inputStream;
@@ -133,7 +131,7 @@ final class BConnectManager {
     //写消息
     void writeMessage(BMessage message) {
         //避免在未连接时消息泛滥
-        if (!isConnected && writeQueue.size() > MAX_MESSAGE_COUNT) {
+        if (!isConnected) {
             return;
         }
 
