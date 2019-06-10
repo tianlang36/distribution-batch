@@ -27,7 +27,7 @@ abstract class BAbstractProtocolHandler extends BFrameAsynchHandler {
         } else {
             //1.先获取一下消息体长度和消息总长度
             buffer.order(ByteOrder.BIG_ENDIAN);
-            int msgTotalLen = BMessage.HEAD_SIZE + buffer.getInt(0);
+            int msgTotalLen = BMessage.HEAD_SIZE + buffer.getInt(buffer.position());
             //2.先判断消息的总长度是否满足
             if (msgTotalLen <= bufferMsgLen) { //满足
                 try {
