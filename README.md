@@ -19,7 +19,7 @@
 
 1. 启动主服务器 java cn.rdtimes.disb.master.BMasterMain [confFileName]。要把实现IInputSplit接口相关的类和依赖包放到服务器classpath路径下。
 2. 启动各个节点服务器 java cn.rdtimes.disb.slave.BNodeMain [confFileName]。要把实现IJob接口相关的类和依赖包放到各个节点服务器classpath路径下。
-3. 客户端再提交任务。如下：
+3. 客户端提交任务。如下：
 
     public static void main(String[] args) throws Exception {
 
