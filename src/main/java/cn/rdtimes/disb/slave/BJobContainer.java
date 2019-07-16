@@ -8,7 +8,7 @@ import cn.rdtimes.disb.core.IJob;
 /**
  * 任务容器,用来运行任务的.
  * 功能:
- * 1.运行job(仅能一个)
+ * 1.运行job
  * 2.更新job状态(启动,停止,异常,完成)
  * 3.向调度器注册和注销自己
  * Created by BZ.
